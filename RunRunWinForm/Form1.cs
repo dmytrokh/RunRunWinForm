@@ -14,9 +14,12 @@ namespace RunRunWinForm
         private Task _run1;
         private Task _run2;
 
+        private readonly Dispatcher dispatcherUI;
+
         public Form1()
         {
             InitializeComponent();
+            dispatcherUI = Dispatcher.CurrentDispatcher;
         }
 
         private void btStart1_Click(object sender, EventArgs e)
@@ -29,12 +32,12 @@ namespace RunRunWinForm
                 return;
             }
 
-            Dispatcher dispatcherUI = Dispatcher.CurrentDispatcher;
-
             _cancellationTokenSource1 = new CancellationTokenSource();
 
-            _run1 = StartLabelAction(dispatcherUI, label1, _cancellationTokenSource1.Token);
-
+            _run1 = Task.Run(async () =>
+            {
+                await DoWorkAsync(label1, _cancellationTokenSource1.Token);
+            });
         }
 
         private void btStop1_Click(object sender, EventArgs e)
@@ -52,11 +55,12 @@ namespace RunRunWinForm
                 return;
             }
 
-            Dispatcher dispatcherUI = Dispatcher.CurrentDispatcher;
-
             _cancellationTokenSource2 = new CancellationTokenSource();
 
-            _run2 = StartLabelAction(dispatcherUI, label2, _cancellationTokenSource2.Token);
+            _run2 = Task.Run(async () =>
+            {
+                await DoWorkAsync(label2, _cancellationTokenSource2.Token);
+            });
         }
 
         private void btStop2_Click(object sender, EventArgs e)
@@ -64,15 +68,7 @@ namespace RunRunWinForm
             _cancellationTokenSource2.Cancel();
         }
 
-        private Task StartLabelAction(Dispatcher dispatcherUI, Label label, CancellationToken token)
-        {
-            return Task.Run(async () =>
-            {
-                await DoWorkAsync(dispatcherUI, label, token);
-            }, token);
-        }
-
-        private async Task DoWorkAsync(Dispatcher dispatcherUI, Label label, CancellationToken token)
+        private async Task DoWorkAsync(Label label, CancellationToken token)
         {
             int cnt = 0;
 
