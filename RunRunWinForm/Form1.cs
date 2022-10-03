@@ -14,12 +14,12 @@ namespace RunRunWinForm
         private Task _run1;
         private Task _run2;
 
-        private readonly Dispatcher dispatcherUI;
+        private readonly Dispatcher _dispatcherUI;
 
         public Form1()
         {
             InitializeComponent();
-            dispatcherUI = Dispatcher.CurrentDispatcher;
+            _dispatcherUI = Dispatcher.CurrentDispatcher;
         }
 
         private void btStart1_Click(object sender, EventArgs e)
@@ -68,15 +68,15 @@ namespace RunRunWinForm
             _cancellationTokenSource2.Cancel();
         }
 
-        private async Task DoWorkAsync(Label label, CancellationToken token)
+        private Task DoWorkAsync(Label label, CancellationToken token)
         {
             int cnt = 0;
 
             DispatcherOperation disp = null;
+            Task deleyTask = null;
 
             while (true)
             {
-                //await Task.Delay(1, token);
                 if (token.IsCancellationRequested)
                 {
                     break;
@@ -84,15 +84,22 @@ namespace RunRunWinForm
 
                 cnt++;
 
-                if (disp == null || disp.Status == DispatcherOperationStatus.Completed
-                        || disp.Status == DispatcherOperationStatus.Aborted)
-                {
-                    disp = dispatcherUI.BeginInvoke(new Action(() =>
-                        {
-                            label.Text = cnt.ToString();
-                        }), DispatcherPriority.Background);
+                if (deleyTask == null || deleyTask.IsCompleted) {
+
+                    deleyTask = Task.Run(async () => { await Task.Delay(5); });
+
+                    if (disp == null || disp.Status == DispatcherOperationStatus.Completed
+                            || disp.Status == DispatcherOperationStatus.Aborted)
+                    {
+                        disp = _dispatcherUI.BeginInvoke(new Action(() =>
+                            {
+                                label.Text = cnt.ToString();
+                            }), DispatcherPriority.Background);
+                    }
                 }
             }
+
+            return Task.CompletedTask;
         }
     }
 }
